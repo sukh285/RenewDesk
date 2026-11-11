@@ -180,7 +180,7 @@ function SidebarBody({
               <span className="text-[10px] font-mono text-zinc-600">Live</span>
             </div>
             <p className="text-[11px] text-zinc-600 leading-normal">
-              Connect external Claude or MCP clients to query and write subscription reviews.
+              Architecture walkthrough, live connector configs, and tool guidebook.
             </p>
             <div className="pt-1">
               {connectClaudeDialog}
