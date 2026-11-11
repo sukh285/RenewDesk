@@ -127,6 +127,15 @@ flowchart LR
 Append-only. Records every create/update with actor (`user`, `claude`, `system`) and a payload.
 Not currently surfaced in the UI.
 
+### Review Board Workflow Mapping (Jira-Inspired 3-Column Board)
+
+The reviews interface organizes all open renewals into three workflow stages without altering database values or replacing the four fundamental decisions (`undecided`, `keep`, `cancel`, `need_info`):
+
+1. **To Review** (`action_status === "open"` AND `decision === "undecided"` with no notes/checklist progress): Untouched renewals awaiting owner investigation.
+2. **In Progress** (`action_status === "open"` AND (`decision === "need_info"` OR (`decision === "undecided"` with notes or checklist progress))): Active evaluations, team seat audits, or need-info questions.
+3. **Awaiting Action** (`action_status === "open"` AND (`decision === "keep"` OR `decision === "cancel"`)): Reached verdicts awaiting human execution. If cancel, awaiting human vendor cancellation confirmation; if keep, awaiting budget sign-off.
+4. **Completed Archive** (`action_status === "completed"`): Collapsed section below the board holding historically completed reviews with dates and confirmation notes.
+
 ---
 
 ## 6. MCP Tools
