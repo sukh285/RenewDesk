@@ -1,26 +1,89 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: hsl(30, 10%, 97%);
+  --color-foreground: hsl(224, 14%, 15%);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--color-primary);
+  --color-sidebar-border: var(--color-border);
+  --color-sidebar-accent-foreground: var(--color-accent-foreground);
+  --color-sidebar-accent: var(--color-accent);
+  --color-sidebar-primary-foreground: var(--color-primary-foreground);
+  --color-sidebar-primary: var(--color-primary);
+  --color-sidebar-foreground: var(--color-foreground);
+  --color-sidebar: hsl(30, 10%, 94%);
+  --color-chart-5: hsl(340, 75%, 55%);
+  --color-chart-4: hsl(280, 65%, 60%);
+  --color-chart-3: hsl(197, 37%, 24%);
+  --color-chart-2: hsl(173, 58%, 39%);
+  --color-chart-1: hsl(221, 83%, 53%);
+  --color-ring: hsl(158, 64%, 32%);
+  --color-input: hsl(30, 10%, 86%);
+  --color-border: hsl(30, 10%, 86%);
+  --color-destructive: hsl(0, 84%, 60%);
+  --color-accent-foreground: hsl(224, 14%, 15%);
+  --color-accent: hsl(158, 64%, 32%, 0.1);
+  --color-muted-foreground: hsl(224, 8%, 46%);
+  --color-muted: hsl(30, 10%, 93%);
+  --color-secondary-foreground: hsl(224, 14%, 15%);
+  --color-secondary: hsl(30, 10%, 93%);
+  --color-primary-foreground: hsl(0, 0%, 100%);
+  --color-primary: hsl(158, 64%, 32%);
+  --color-popover-foreground: hsl(224, 14%, 15%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-card-foreground: hsl(224, 14%, 15%);
+  --color-card: hsl(0, 0%, 100%);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: hsl(30, 10%, 97%);
+  --foreground: hsl(224, 14%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(224, 14%, 15%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(224, 14%, 15%);
+  --primary: hsl(158, 64%, 32%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(30, 10%, 93%);
+  --secondary-foreground: hsl(224, 14%, 15%);
+  --muted: hsl(30, 10%, 93%);
+  --muted-foreground: hsl(224, 8%, 46%);
+  --accent: hsl(158, 64%, 32%, 0.1);
+  --accent-foreground: hsl(224, 14%, 15%);
+  --destructive: hsl(0, 84%, 60%);
+  --border: hsl(30, 10%, 86%);
+  --input: hsl(30, 10%, 86%);
+  --ring: hsl(158, 64%, 32%);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: hsl(30, 10%, 97%);
+  color: hsl(224, 14%, 15%);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Table improvements */
+table {
+  border-collapse: collapse;
+}
+
+/* Focus ring improvements */
+*:focus-visible {
+  outline: 2px solid hsl(158, 64%, 32%);
+  outline-offset: 2px;
 }
