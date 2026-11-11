@@ -26,6 +26,7 @@ Chronological log of the build session. All timestamps are IST (Asia/Kolkata, UT
 | 2026-11-11 17:35 | Live web authentication verified | Demo login and session cookie verified on production domain. Overview metrics verified against live Postgres. | Completed |
 | 2026-11-11 18:05 | Full UI Redesign and Zero-Cost Testing Guide | Redesigned into a restrained B2B finance dashboard with warm off-white canvas, clean cards, tabular figures, urgency badges, cancellation safety modals, and multi-client connection instructions for Claude Desktop Free, MCP Inspector, and Gemini. Passed TypeScript and production builds. | Completed |
 | 2026-11-11 18:40 | Visual Depth, Connect Claude Walkthrough, and 3-Column Reviews Board | Layered multi-shadows and motion-reduced tokens added. Connect Claude upgraded with 5-step concrete Loom Pro architectural walkthrough and reliable clipboard toasts. Renewal reviews redesigned into a Jira-inspired 3-column workflow board (To review, In progress, Awaiting action) with a collapsible completed archive. 32/32 production audit tests passed. | Completed |
+| 2026-11-11 18:57 | MCP Guidebook Spacious Redesign & Presentation Deck | Fixed base Dialog sm:max-w-sm constraint. Expanded modal to a spacious 5xl presentation layout. Renamed sidebar action to MCP Guidebook. Added 4 dedicated tabs: Project Overview & Specs deck, 5-step concrete Loom Pro walkthrough, Connect Claude client setups, and declared MCP tools reference with live copyable prompts. 32/32 production audit tests passed. | Completed |
 
 ---
 
