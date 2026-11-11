@@ -194,8 +194,8 @@ RenewDesk is an independent assignment prototype created by Sukhmeet Singh Lamba
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-username/renewdesk.git
-cd renewdesk
+git clone https://github.com/sukh285/RenewDesk.git
+cd RenewDesk
 
 # 2. Install dependencies
 npm install
