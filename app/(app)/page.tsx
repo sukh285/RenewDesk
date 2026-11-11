@@ -177,7 +177,7 @@ async function OverviewDataView() {
       {/* 3 Metric Summary Cards */}
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
         {/* Card 1: 30-Day Total Renewal Commit */}
-        <Card className="border-stone-200 bg-white shadow-2xs">
+        <Card className="border-stone-200 bg-white depth-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between text-xs text-zinc-500 font-medium">
               <span>30-Day Renewal Spend</span>
@@ -197,7 +197,7 @@ async function OverviewDataView() {
         </Card>
 
         {/* Card 2: Reviews Needing Decision */}
-        <Card className="border-stone-200 bg-white shadow-2xs">
+        <Card className="border-stone-200 bg-white depth-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between text-xs text-zinc-500 font-medium">
               <span>Awaiting Decision</span>
@@ -220,7 +220,7 @@ async function OverviewDataView() {
         </Card>
 
         {/* Card 3: Pending Vendor Cancellations */}
-        <Card className="border-stone-200 bg-white shadow-2xs">
+        <Card className="border-stone-200 bg-white depth-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between text-xs text-zinc-500 font-medium">
               <span>Pending Vendor Action</span>
@@ -244,7 +244,7 @@ async function OverviewDataView() {
       </div>
 
       {/* Main Section: Approaching Renewals Table */}
-      <Card className="border-stone-200 bg-white shadow-2xs overflow-hidden">
+      <Card className="border-stone-200 bg-white depth-card overflow-hidden">
         <CardHeader className="p-4 pb-3 border-b border-stone-100 flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle className="text-sm font-semibold text-zinc-900">

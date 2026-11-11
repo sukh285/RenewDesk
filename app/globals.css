@@ -58,12 +58,20 @@
   --border: hsl(36, 10%, 88%);
   --input: hsl(36, 10%, 88%);
   --ring: hsl(160, 84%, 25%);
+
+  /* Subtle multi-layer shadows for tactile visual depth */
+  --shadow-subtle: 0 1px 2px 0 rgba(24, 24, 27, 0.03), 0 1px 3px 1px rgba(24, 24, 27, 0.02);
+  --shadow-card: 0 1px 3px 0 rgba(24, 24, 27, 0.04), 0 1px 2px -1px rgba(24, 24, 27, 0.03);
+  --shadow-card-hover: 0 4px 6px -1px rgba(24, 24, 27, 0.06), 0 2px 4px -2px rgba(24, 24, 27, 0.04);
+  --shadow-elevated: 0 10px 15px -3px rgba(24, 24, 27, 0.08), 0 4px 6px -4px rgba(24, 24, 27, 0.04);
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Subtle table borders */
@@ -80,4 +88,32 @@ table {
 *:focus-visible {
   outline: 2px solid hsl(160, 84%, 25%);
   outline-offset: 1px;
+}
+
+/* Layered depth utility classes */
+.depth-card {
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 150ms ease-out, border-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.depth-card-interactive {
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 150ms ease-out, border-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.depth-card-interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: hsl(36, 12%, 82%);
+  transform: translateY(-1px);
+}
+
+/* Accessibility: Respect prefers-reduced-motion strictly */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transform: none !important;
+  }
 }

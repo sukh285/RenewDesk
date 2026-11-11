@@ -702,7 +702,7 @@ export default function SubscriptionsPage() {
       </div>
 
       {/* Filter / Search Bar */}
-      <div className="p-3 bg-white rounded-lg border border-stone-200 shadow-2xs space-y-2.5">
+      <div className="p-3 bg-white rounded-lg border border-stone-200 depth-card space-y-2.5">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -766,7 +766,7 @@ export default function SubscriptionsPage() {
       </div>
 
       {/* Main Table */}
-      <Card className="border-stone-200 bg-white shadow-2xs overflow-hidden">
+      <Card className="border-stone-200 bg-white depth-card overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-3">

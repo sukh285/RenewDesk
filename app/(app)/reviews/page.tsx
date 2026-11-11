@@ -17,12 +17,15 @@ import {
   CheckSquare,
   AlertCircle,
   Archive,
+  ChevronDown,
+  ChevronUp,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
@@ -75,7 +78,10 @@ function VendorAvatar({ vendor }: { vendor: string }) {
 }
 
 function DecisionBadge({ decision }: { decision: string }) {
-  const styles: Record<string, { bg: string; text: string; border: string; icon: React.ElementType; label: string }> = {
+  const styles: Record<
+    string,
+    { bg: string; text: string; border: string; icon: React.ElementType; label: string }
+  > = {
     undecided: {
       bg: "bg-amber-50",
       text: "text-amber-800",
@@ -102,38 +108,62 @@ function DecisionBadge({ decision }: { decision: string }) {
       text: "text-blue-800",
       border: "border-blue-200",
       icon: HelpCircle,
-      label: "Need info",
+      label: "Need Info",
     },
   };
 
-  const current = styles[decision] ?? styles.undecided;
-  const Icon = current.icon;
+  const style = styles[decision] || styles.undecided;
+  const Icon = style.icon;
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border ${current.bg} ${current.text} ${current.border}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border ${style.bg} ${style.text} ${style.border}`}
     >
       <Icon className="h-3 w-3 shrink-0" />
-      <span>{current.label}</span>
+      <span>{style.label}</span>
     </span>
   );
 }
 
-// ---- Edit Review Sheet ----
+function UrgencyBadge({ dueDate }: { dueDate: string | null }) {
+  if (!dueDate) return null;
+  const days = daysUntil(dueDate);
+
+  if (days < 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-900 border border-red-300">
+        <AlertTriangle className="h-2.5 w-2.5" />
+        Overdue {Math.abs(days)}d
+      </span>
+    );
+  }
+
+  if (days <= 7) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300">
+        <Clock className="h-2.5 w-2.5" />
+        Due in {days}d
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-stone-100 text-zinc-600 border border-stone-200">
+      {days}d remaining
+    </span>
+  );
+}
+
+// ---- Sheet: Edit Review ----
 
 interface EditReviewSheetProps {
+  review?: ReviewWithSubscription;
   open: boolean;
   onClose: () => void;
-  review?: ReviewWithSubscription;
   onSaved: () => void;
 }
 
-function EditReviewSheet({
-  open,
-  onClose,
-  review,
-  onSaved,
-}: EditReviewSheetProps) {
+function EditReviewSheet({ review, open, onClose, onSaved }: EditReviewSheetProps) {
   const [decision, setDecision] = useState<Decision>("undecided");
   const [owner, setOwner] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -141,69 +171,75 @@ function EditReviewSheet({
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newChecklistText, setNewChecklistText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (open && review) {
+    if (review) {
       setDecision(review.decision);
-      setOwner(review.owner ?? "");
-      setDueDate(review.due_date ?? "");
-      setRationale(review.rationale ?? "");
-      setChecklist(review.checklist ? [...review.checklist] : []);
-      setNewChecklistText("");
+      setOwner(review.owner || "");
+      setDueDate(review.due_date || "");
+      setRationale(review.rationale || "");
+      setChecklist(Array.isArray(review.checklist) ? review.checklist : []);
+      setErrors({});
     }
-  }, [open, review]);
+  }, [review]);
 
-  function addChecklistItem() {
-    if (!newChecklistText.trim()) return;
-    setChecklist([...checklist, { text: newChecklistText.trim(), done: false }]);
+  function handleAddChecklistItem() {
+    const trimmed = newChecklistText.trim();
+    if (!trimmed) return;
+    setChecklist([...checklist, { text: trimmed, done: false }]);
     setNewChecklistText("");
   }
 
-  function removeChecklistItem(index: number) {
-    setChecklist(checklist.filter((_, i) => i !== index));
+  function handleToggleChecklistItem(index: number) {
+    const updated = checklist.map((item, i) =>
+      i === index ? { ...item, done: !item.done } : item
+    );
+    setChecklist(updated);
   }
 
-  function toggleChecklistItem(index: number) {
-    setChecklist(
-      checklist.map((item, i) =>
-        i === index ? { ...item, done: !item.done } : item
-      )
-    );
+  function handleRemoveChecklistItem(index: number) {
+    setChecklist(checklist.filter((_, i) => i !== index));
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!review) return;
+
     setSaving(true);
+    setErrors({});
 
     try {
       const res = await fetch(`/api/reviews/${review.id}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          version: review.version,
           decision,
           owner: owner.trim() || null,
-          due_date: dueDate || undefined,
+          due_date: dueDate || null,
           rationale: rationale.trim() || null,
           checklist,
         }),
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error ?? "Failed to save review");
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        if (json.details) {
+          const fieldErrors: Record<string, string> = {};
+          for (const [k, v] of Object.entries(json.details)) {
+            fieldErrors[k] = (v as string[])[0];
+          }
+          setErrors(fieldErrors);
+        }
+        toast.error(json.error || "Failed to update review");
+        return;
       }
 
-      toast.success(
-        decision === "cancel"
-          ? "Decision saved. Cancellation still needs confirmation."
-          : "Review decision saved."
-      );
+      toast.success("Review updated successfully");
       onSaved();
       onClose();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "An error occurred");
+    } catch {
+      toast.error("Network error. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -212,17 +248,17 @@ function EditReviewSheet({
   if (!review) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-md p-6 bg-white overflow-y-auto">
-        <SheetHeader className="pb-3 border-b border-stone-100">
-          <div className="flex items-center gap-2.5">
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto p-6 bg-white border-l border-stone-200">
+        <SheetHeader className="pb-4 border-b border-stone-100">
+          <div className="flex items-center gap-3">
             <VendorAvatar vendor={review.subscription.vendor} />
             <div>
-              <SheetTitle className="text-base font-semibold text-zinc-900">
-                Review: {review.subscription.vendor}
+              <SheetTitle className="text-base font-bold text-zinc-900">
+                {review.subscription.vendor} Review
               </SheetTitle>
-              <p className="text-xs text-zinc-500 font-mono mt-0.5">
-                Renews {formatDate(review.subscription.next_renewal)} ({paiseTo_inr(review.subscription.amount_paise)})
+              <p className="text-xs text-zinc-500 tabular-nums">
+                {paiseTo_inr(review.subscription.amount_paise)} / {review.subscription.billing_cycle}
               </p>
             </div>
           </div>
@@ -251,7 +287,6 @@ function EditReviewSheet({
               </SelectContent>
             </Select>
 
-            {/* Cancel Warning Notice */}
             {decision === "cancel" && (
               <div className="mt-2 p-2.5 rounded-md bg-red-50 border border-red-200 flex items-start gap-2 text-[11px] text-red-800">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
@@ -288,6 +323,9 @@ function EditReviewSheet({
               onChange={(e) => setDueDate(e.target.value)}
               className="h-8 text-xs font-mono bg-stone-50/50 border-stone-200"
             />
+            {errors.due_date && (
+              <p className="text-[11px] text-red-600">{errors.due_date}</p>
+            )}
           </div>
 
           {/* Rationale */}
@@ -307,42 +345,44 @@ function EditReviewSheet({
 
           {/* Checklist */}
           <div className="space-y-2 pt-2 border-t border-stone-100">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-zinc-700">
-                Verification Checklist
-              </Label>
-              <span className="text-[11px] text-zinc-500 font-mono">
+            <Label className="text-xs font-medium text-zinc-700 flex items-center justify-between">
+              <span>Decision Checklist</span>
+              <span className="text-[11px] font-normal text-zinc-500">
                 {checklist.filter((c) => c.done).length}/{checklist.length} done
               </span>
+            </Label>
+
+            <div className="space-y-1.5">
+              {checklist.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between gap-2 p-1.5 rounded bg-stone-50 border border-stone-200/80 text-xs"
+                >
+                  <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={item.done}
+                      onChange={() => handleToggleChecklistItem(index)}
+                      className="h-3.5 w-3.5 rounded border-stone-300 text-emerald-700"
+                    />
+                    <span className={`truncate text-zinc-800 ${item.done ? "line-through text-zinc-400" : ""}`}>
+                      {item.text}
+                    </span>
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveChecklistItem(index)}
+                    className="h-5 w-5 p-0 text-zinc-400 hover:text-red-600 shrink-0"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
 
-            {checklist.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-2 rounded bg-stone-50 border border-stone-200/60"
-              >
-                <label className="flex items-center gap-2 flex-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={item.done}
-                    onChange={() => toggleChecklistItem(idx)}
-                    className="h-3.5 w-3.5 rounded border-stone-300 text-emerald-800"
-                  />
-                  <span className={`text-xs ${item.done ? "line-through text-zinc-600" : "text-zinc-800"}`}>
-                    {item.text}
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => removeChecklistItem(idx)}
-                  className="text-zinc-400 hover:text-red-600 p-0.5"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-
-            <div className="flex items-center gap-1.5 pt-1">
+            <div className="flex gap-2 pt-1">
               <Input
                 placeholder="Add checklist item..."
                 value={newChecklistText}
@@ -350,26 +390,25 @@ function EditReviewSheet({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    addChecklistItem();
+                    handleAddChecklistItem();
                   }
                 }}
-                className="h-7 text-xs bg-stone-50/50 border-stone-200 flex-1"
+                className="h-7 text-xs bg-stone-50/50 border-stone-200"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={addChecklistItem}
-                disabled={!newChecklistText.trim()}
-                className="h-7 px-2 text-xs border-stone-200"
+                onClick={handleAddChecklistItem}
+                className="h-7 px-2.5 text-xs border-stone-200 shrink-0"
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-3 w-3 mr-1" />
+                Add
               </Button>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-2">
             <Button
               type="button"
               variant="outline"
@@ -386,7 +425,7 @@ function EditReviewSheet({
               disabled={saving}
               className="h-8 text-xs bg-emerald-800 hover:bg-emerald-900 text-white"
             >
-              {saving ? "Saving..." : "Save Review"}
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
@@ -395,31 +434,23 @@ function EditReviewSheet({
   );
 }
 
-// ---- Explicit Complete / Confirmation Dialog ----
+// ---- Dialog: Complete Review ----
 
 interface CompleteDialogProps {
   review: ReviewWithSubscription | null;
-  open: boolean;
   onClose: () => void;
   onCompleted: () => void;
 }
 
-function CompleteReviewDialog({
-  review,
-  open,
-  onClose,
-  onCompleted,
-}: CompleteDialogProps) {
+function CompleteDialog({ review, onClose, onCompleted }: CompleteDialogProps) {
   const [confirmed, setConfirmed] = useState(false);
   const [note, setNote] = useState("");
   const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setConfirmed(false);
-      setNote("");
-    }
-  }, [open]);
+    setConfirmed(false);
+    setNote("");
+  }, [review]);
 
   if (!review) return null;
 
@@ -427,8 +458,9 @@ function CompleteReviewDialog({
 
   async function handleConfirm() {
     if (!review) return;
+
     if (isCancel && !confirmed) {
-      toast.error("Please confirm that you have completed cancellation with the vendor.");
+      toast.error("Please confirm that cancellation was completed with the vendor.");
       return;
     }
 
@@ -438,35 +470,36 @@ function CompleteReviewDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          version: review.version,
           completion_note: note.trim() || undefined,
+          confirmed_with_vendor: isCancel ? true : undefined,
         }),
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error ?? "Failed to complete review");
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        toast.error(json.error || "Failed to complete review");
+        return;
       }
 
       toast.success(
         isCancel
-          ? "Cancellation confirmed and review completed."
+          ? "Vendor cancellation confirmed and completed."
           : "Review marked as completed."
       );
       onCompleted();
       onClose();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "An error occurred");
+    } catch {
+      toast.error("Network error. Please try again.");
     } finally {
       setCompleting(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-md p-6 bg-white border-stone-200 text-xs">
-        <DialogHeader className="pb-3 border-b border-stone-100">
-          <DialogTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+    <Dialog open={!!review} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md p-5 bg-white border-stone-200 shadow-xl rounded-xl">
+        <DialogHeader className="pb-2 border-b border-stone-100">
+          <DialogTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2">
             {isCancel ? (
               <>
                 <ShieldAlert className="h-4 w-4 text-red-600" />
@@ -481,22 +514,32 @@ function CompleteReviewDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="mt-3 space-y-3.5">
+        <div className="py-2 space-y-3 text-xs text-zinc-600">
+          <div className="p-2.5 rounded bg-stone-50 border border-stone-200">
+            <div className="font-semibold text-zinc-900">
+              {review.subscription.vendor}
+            </div>
+            <div className="text-[11px] text-zinc-500 tabular-nums">
+              {paiseTo_inr(review.subscription.amount_paise)} / {review.subscription.billing_cycle}
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-[11px] text-zinc-500">Current Decision:</span>
+              <DecisionBadge decision={review.decision} />
+            </div>
+          </div>
+
           {isCancel ? (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-900 leading-normal space-y-1.5">
-              <p className="font-semibold text-xs">
-                Action required outside RenewDesk:
+            <div className="p-3 rounded-md bg-red-50/70 border border-red-200/80 space-y-2 text-red-900">
+              <p className="font-semibold text-xs text-red-800">
+                Human Confirmation Required
               </p>
-              <p className="text-[11px] text-red-800">
-                Have you logged into {review.subscription.vendor} or contacted their billing team to cancel this subscription?
-              </p>
-              <p className="text-[11px] text-red-700">
-                RenewDesk records your decision and outcomes. It does not cancel contracts automatically.
+              <p className="text-[11px] text-red-700 leading-normal">
+                Setting a Cancel decision does not terminate your subscription with {review.subscription.vendor}. You must log into their billing portal or contact their team to stop billing.
               </p>
             </div>
           ) : (
-            <p className="text-zinc-600 leading-normal">
-              Marking this review for {review.subscription.vendor} as completed locks this occurrence and saves the verified outcome to history.
+            <p className="text-xs text-zinc-600">
+              Marking this review as completed records the keep verdict and concludes this renewal cycle.
             </p>
           )}
 
@@ -563,11 +606,118 @@ function CompleteReviewDialog({
   );
 }
 
+// ---- Board Card: Compact Information Density ----
+
+interface ReviewCardProps {
+  review: ReviewWithSubscription;
+  onEdit: (review: ReviewWithSubscription) => void;
+  onComplete: (review: ReviewWithSubscription) => void;
+}
+
+function ReviewCard({ review, onEdit, onComplete }: ReviewCardProps) {
+  const checklistItems = Array.isArray(review.checklist) ? review.checklist : [];
+  const doneChecklist = checklistItems.filter((c) => c.done).length;
+  const isAwaitingAction = review.decision === "keep" || review.decision === "cancel";
+  const isCancel = review.decision === "cancel";
+
+  return (
+    <div className="p-3 rounded-lg border border-stone-200/90 bg-white depth-card-interactive space-y-2.5">
+      {/* Card Header */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <VendorAvatar vendor={review.subscription.vendor} />
+          <div className="min-w-0">
+            <h4 className="text-xs font-semibold text-zinc-900 truncate">
+              {review.subscription.vendor}
+            </h4>
+            <p className="text-[11px] text-zinc-500 tabular-nums">
+              {paiseTo_inr(review.subscription.amount_paise)} / {review.subscription.billing_cycle}
+            </p>
+          </div>
+        </div>
+
+        <DecisionBadge decision={review.decision} />
+      </div>
+
+      {/* Due Date & Urgency */}
+      <div className="flex items-center justify-between text-[11px] text-zinc-600 pt-1 border-t border-stone-100">
+        <div className="flex items-center gap-1 font-mono text-[11px]">
+          <Calendar className="h-3 w-3 text-zinc-400" />
+          <span>{review.due_date ? formatDate(review.due_date) : "No due date"}</span>
+        </div>
+        <UrgencyBadge dueDate={review.due_date} />
+      </div>
+
+      {/* Rationale Snippet (if available) */}
+      {review.rationale && (
+        <p className="text-[11px] text-zinc-600 line-clamp-2 bg-stone-50/70 p-1.5 rounded border border-stone-200/50 leading-relaxed italic">
+          "{review.rationale}"
+        </p>
+      )}
+
+      {/* Owner & Checklist indicators */}
+      <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1 border-t border-stone-100">
+        <div className="flex items-center gap-1 truncate pr-2">
+          <User className="h-3 w-3 text-zinc-400 shrink-0" />
+          <span className="truncate">{review.owner || "Unassigned"}</span>
+        </div>
+
+        {checklistItems.length > 0 && (
+          <div className="flex items-center gap-1 font-mono text-[10px] text-zinc-600 bg-stone-100 px-1.5 py-0.5 rounded shrink-0">
+            <CheckSquare className="h-3 w-3 text-zinc-500" />
+            <span>{doneChecklist}/{checklistItems.length}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Card Action Controls */}
+      <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onEdit(review)}
+          className="h-6 px-2 text-[11px] font-medium border-stone-200 text-zinc-700 hover:bg-stone-50"
+        >
+          <Pencil className="h-3 w-3 mr-1 text-zinc-500" />
+          Edit Verdict
+        </Button>
+
+        {isAwaitingAction && (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => onComplete(review)}
+            className={`h-6 px-2 text-[11px] font-medium text-white ${
+              isCancel
+                ? "bg-red-700 hover:bg-red-800"
+                : "bg-emerald-800 hover:bg-emerald-900"
+            }`}
+          >
+            {isCancel ? (
+              <>
+                <ShieldAlert className="h-3 w-3 mr-1" />
+                Confirm Cancel
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                Mark Done
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---- Main Reviews Page ----
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<ReviewWithSubscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   const [editingReview, setEditingReview] = useState<ReviewWithSubscription | undefined>();
   const [completingReview, setCompletingReview] = useState<ReviewWithSubscription | null>(null);
@@ -590,327 +740,269 @@ export default function ReviewsPage() {
     fetchReviews();
   }, [fetchReviews]);
 
-  // Group reviews into logical operational buckets
+  // Separation of open vs completed
   const openReviews = reviews.filter((r) => r.action_status === "open");
   const completedReviews = reviews.filter((r) => r.action_status === "completed");
 
-  const needingDecision = openReviews.filter(
-    (r) => r.decision === "undecided" || r.decision === "need_info"
+  // Documented 3-Column Workflow Stage Mapping:
+  // Column 1: "To review" -> Open reviews untouched or awaiting investigation (undecided without notes/checklist progress)
+  const toReviewItems = openReviews.filter((r) => {
+    const hasNotes = Boolean(r.rationale && r.rationale.trim().length > 0);
+    const hasProgress = Array.isArray(r.checklist) && r.checklist.some((c) => c.done);
+    return r.decision === "undecided" && !hasNotes && !hasProgress;
+  });
+
+  // Column 2: "In progress" -> Under active evaluation (need_info OR undecided with active notes/checklist progress)
+  const inProgressItems = openReviews.filter((r) => {
+    const hasNotes = Boolean(r.rationale && r.rationale.trim().length > 0);
+    const hasProgress = Array.isArray(r.checklist) && r.checklist.some((c) => c.done);
+    return r.decision === "need_info" || (r.decision === "undecided" && (hasNotes || hasProgress));
+  });
+
+  // Column 3: "Awaiting action" -> Decision reached (keep or cancel) but awaiting explicit human execution/confirmation
+  const awaitingActionItems = openReviews.filter(
+    (r) => r.decision === "keep" || r.decision === "cancel"
   );
-  const keepReviews = openReviews.filter((r) => r.decision === "keep");
-  const cancelReviews = openReviews.filter((r) => r.decision === "cancel");
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1 border-b border-stone-200/80">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-stone-200/80">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-zinc-900">
-            Renewal Reviews
+            Renewal Reviews Board
           </h1>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Own the keep or cancel decision for each upcoming subscription renewal.
+            Jira-inspired three-stage decision workflow for subscriptions approaching renewal.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
-          <span>{openReviews.length} open</span>
+        <div className="flex items-center gap-2 text-xs text-zinc-600 font-mono">
+          <span className="px-2 py-0.5 rounded bg-white border border-stone-200">
+            {openReviews.length} open
+          </span>
           <span>•</span>
-          <span>{completedReviews.length} completed</span>
+          <span className="px-2 py-0.5 rounded bg-stone-100 border border-stone-200">
+            {completedReviews.length} completed
+          </span>
         </div>
       </div>
 
       {loading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Section 1: Needs Decision */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between pb-1 border-b border-stone-200">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-800">
-                  Awaiting Decision ({needingDecision.length})
-                </h2>
-              </div>
-              <span className="text-[11px] text-zinc-500">
-                Requires owner and keep or cancel verdict
-              </span>
-            </div>
-
-            {needingDecision.length === 0 ? (
-              <p className="text-xs text-zinc-400 italic p-4 bg-white rounded border border-stone-200 text-center">
-                All approaching reviews currently have a recorded decision.
-              </p>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {needingDecision.map((r) => (
-                  <ReviewCard
-                    key={r.id}
-                    review={r}
-                    onEdit={() => setEditingReview(r)}
-                    onComplete={() => setCompletingReview(r)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Section 2: Cancel Decisions (Vendor Action Required) */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between pb-1 border-b border-stone-200">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-800">
-                  Cancel Verdicts Pending Vendor Action ({cancelReviews.length})
-                </h2>
-              </div>
-              <span className="text-[11px] text-red-700 font-medium bg-red-50 px-2 py-0.5 rounded border border-red-200">
-                Cancellation must be completed with the vendor
-              </span>
-            </div>
-
-            {cancelReviews.length === 0 ? (
-              <p className="text-xs text-zinc-400 italic p-4 bg-white rounded border border-stone-200 text-center">
-                No open cancel verdicts pending vendor completion.
-              </p>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {cancelReviews.map((r) => (
-                  <ReviewCard
-                    key={r.id}
-                    review={r}
-                    onEdit={() => setEditingReview(r)}
-                    onComplete={() => setCompletingReview(r)}
-                    highlightCancel
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Section 3: Keep Decisions */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between pb-1 border-b border-stone-200">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-800">
-                  Keep Verdicts ({keepReviews.length})
-                </h2>
-              </div>
-              <span className="text-[11px] text-zinc-500">
-                Decision confirmed to continue subscription
-              </span>
-            </div>
-
-            {keepReviews.length === 0 ? (
-              <p className="text-xs text-zinc-400 italic p-4 bg-white rounded border border-stone-200 text-center">
-                No active subscriptions marked as keep awaiting completion.
-              </p>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {keepReviews.map((r) => (
-                  <ReviewCard
-                    key={r.id}
-                    review={r}
-                    onEdit={() => setEditingReview(r)}
-                    onComplete={() => setCompletingReview(r)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Section 4: Completed Archive */}
-          {completedReviews.length > 0 && (
-            <section className="space-y-3 pt-4 border-t border-stone-200/80">
-              <div className="flex items-center justify-between pb-1 border-b border-stone-200">
-                <div className="flex items-center gap-2 text-zinc-500">
-                  <Archive className="h-3.5 w-3.5" />
-                  <h2 className="text-xs font-semibold uppercase tracking-wider">
-                    Completed Reviews Archive ({completedReviews.length})
+          {/* 3-COLUMN JIRA INSPIRED WORKFLOW BOARD */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {/* COLUMN 1: TO REVIEW */}
+            <div className="rounded-xl border border-stone-200/90 bg-stone-50/70 p-3 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-stone-200/80">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-800">
+                    To Review
                   </h2>
                 </div>
-                <span className="text-[11px] text-zinc-500">
-                  Past review occurrences preserved for audit
+                <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white text-zinc-700 border border-stone-200 shadow-2xs">
+                  {toReviewItems.length}
                 </span>
               </div>
+              <p className="text-[11px] text-zinc-500">
+                Untouched renewals awaiting owner investigation.
+              </p>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 opacity-80 hover:opacity-100 transition-opacity">
-                {completedReviews.map((r) => (
-                  <ReviewCard
-                    key={r.id}
-                    review={r}
-                    onEdit={() => setEditingReview(r)}
-                    onComplete={() => setCompletingReview(r)}
-                    isArchived
-                  />
-                ))}
+              {toReviewItems.length === 0 ? (
+                <div className="p-4 rounded-lg border border-dashed border-stone-200 bg-white/60 text-center text-xs text-zinc-400 italic">
+                  No subscriptions waiting to be reviewed.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {toReviewItems.map((r) => (
+                    <ReviewCard
+                      key={r.id}
+                      review={r}
+                      onEdit={setEditingReview}
+                      onComplete={setCompletingReview}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* COLUMN 2: IN PROGRESS */}
+            <div className="rounded-xl border border-stone-200/90 bg-stone-50/70 p-3 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-stone-200/80">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-800">
+                    In Progress
+                  </h2>
+                </div>
+                <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white text-zinc-700 border border-stone-200 shadow-2xs">
+                  {inProgressItems.length}
+                </span>
               </div>
-            </section>
-          )}
+              <p className="text-[11px] text-zinc-500">
+                Active seat audits, team usage checks, or need-info states.
+              </p>
+
+              {inProgressItems.length === 0 ? (
+                <div className="p-4 rounded-lg border border-dashed border-stone-200 bg-white/60 text-center text-xs text-zinc-400 italic">
+                  No reviews currently in progress.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {inProgressItems.map((r) => (
+                    <ReviewCard
+                      key={r.id}
+                      review={r}
+                      onEdit={setEditingReview}
+                      onComplete={setCompletingReview}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* COLUMN 3: AWAITING ACTION */}
+            <div className="rounded-xl border border-stone-200/90 bg-stone-50/70 p-3 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-stone-200/80">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-800">
+                    Awaiting Action
+                  </h2>
+                </div>
+                <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white text-zinc-700 border border-stone-200 shadow-2xs">
+                  {awaitingActionItems.length}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500">
+                Decided verdicts pending vendor cancellation or completion.
+              </p>
+
+              {awaitingActionItems.length === 0 ? (
+                <div className="p-4 rounded-lg border border-dashed border-stone-200 bg-white/60 text-center text-xs text-zinc-400 italic">
+                  No decided renewals awaiting execution.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {awaitingActionItems.map((r) => (
+                    <ReviewCard
+                      key={r.id}
+                      review={r}
+                      onEdit={setEditingReview}
+                      onComplete={setCompletingReview}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* COLLAPSIBLE ARCHIVE: COMPLETED REVIEWS */}
+          <div className="pt-2">
+            <div className="rounded-xl border border-stone-200/80 bg-white overflow-hidden shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setArchiveOpen(!archiveOpen)}
+                className="w-full p-3.5 flex items-center justify-between text-left hover:bg-stone-50/70 transition-colors"
+                aria-expanded={archiveOpen}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Archive className="h-4 w-4 text-zinc-500" />
+                  <div>
+                    <h3 className="text-xs font-semibold text-zinc-900">
+                      Completed Reviews Archive
+                    </h3>
+                    <p className="text-[11px] text-zinc-500">
+                      {completedReviews.length} historically resolved and confirmed renewal reviews
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-stone-100 text-zinc-600 border border-stone-200">
+                    {completedReviews.length} archived
+                  </span>
+                  {archiveOpen ? (
+                    <ChevronUp className="h-4 w-4 text-zinc-500" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-zinc-500" />
+                  )}
+                </div>
+              </button>
+
+              {archiveOpen && (
+                <div className="p-4 pt-1 border-t border-stone-100 space-y-3">
+                  {completedReviews.length === 0 ? (
+                    <p className="text-xs text-zinc-400 italic p-3 text-center">
+                      No reviews have been completed yet.
+                    </p>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {completedReviews.map((r) => (
+                        <div
+                          key={r.id}
+                          className="p-3 rounded-lg border border-stone-200 bg-stone-50/50 space-y-2 text-xs"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <VendorAvatar vendor={r.subscription.vendor} />
+                              <div>
+                                <h4 className="font-semibold text-zinc-900">
+                                  {r.subscription.vendor}
+                                </h4>
+                                <p className="text-[11px] text-zinc-500 tabular-nums">
+                                  {paiseTo_inr(r.subscription.amount_paise)} / {r.subscription.billing_cycle}
+                                </p>
+                              </div>
+                            </div>
+                            <DecisionBadge decision={r.decision} />
+                          </div>
+
+                          <div className="text-[11px] text-zinc-500 space-y-0.5 pt-1 border-t border-stone-200/60">
+                            <div>
+                              Owner: <span className="text-zinc-700 font-medium">{r.owner || "Unassigned"}</span>
+                            </div>
+                            <div>
+                              Completed: <span className="font-mono text-zinc-700">{r.completed_at ? formatDate(r.completed_at) : "Done"}</span>
+                            </div>
+                            {r.completion_note && (
+                              <p className="mt-1 p-1.5 rounded bg-white border border-stone-200/80 italic text-zinc-600">
+                                "{r.completion_note}"
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Edit Review Sheet */}
+      {/* Edit Sheet */}
       <EditReviewSheet
+        review={editingReview}
         open={!!editingReview}
         onClose={() => setEditingReview(undefined)}
-        review={editingReview}
         onSaved={fetchReviews}
       />
 
-      {/* Complete Review Dialog */}
-      <CompleteReviewDialog
-        open={!!completingReview}
-        onClose={() => setCompletingReview(null)}
+      {/* Complete Dialog */}
+      <CompleteDialog
         review={completingReview}
+        onClose={() => setCompletingReview(null)}
         onCompleted={fetchReviews}
       />
     </div>
-  );
-}
-
-// ---- Individual Review Card ----
-
-function ReviewCard({
-  review,
-  onEdit,
-  onComplete,
-  highlightCancel = false,
-  isArchived = false,
-}: {
-  review: ReviewWithSubscription;
-  onEdit: () => void;
-  onComplete: () => void;
-  highlightCancel?: boolean;
-  isArchived?: boolean;
-}) {
-  const days = review.due_date ? daysUntil(review.due_date) : null;
-  const sub = review.subscription;
-  const checklistDone = review.checklist ? review.checklist.filter((c) => c.done).length : 0;
-  const checklistTotal = review.checklist ? review.checklist.length : 0;
-
-  return (
-    <Card
-      className={`border bg-white shadow-2xs text-xs flex flex-col justify-between ${
-        highlightCancel
-          ? "border-red-200 bg-red-50/20"
-          : isArchived
-          ? "border-stone-200/70 bg-stone-50/50"
-          : "border-stone-200"
-      }`}
-    >
-      <CardContent className="p-4 space-y-3">
-        {/* Card Header: Vendor + Decision */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <VendorAvatar vendor={sub.vendor} />
-            <div className="min-w-0">
-              <h3 className="font-semibold text-zinc-900 truncate">{sub.vendor}</h3>
-              <p className="text-[11px] text-zinc-500 font-mono">
-                {paiseTo_inr(sub.amount_paise)} / {sub.billing_cycle === "monthly" ? "mo" : "yr"}
-              </p>
-            </div>
-          </div>
-          <DecisionBadge decision={review.decision} />
-        </div>
-
-        {/* Timelines & Owner */}
-        <div className="space-y-1.5 pt-2 border-t border-stone-100 text-[11px] text-zinc-600">
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-600">Next Renewal:</span>
-            <span className="font-mono text-zinc-900 font-medium">
-              {formatDate(sub.next_renewal)}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-600">Review Deadline:</span>
-            <span className="font-mono text-zinc-900">
-              {review.due_date ? formatDate(review.due_date) : "Immediate"}
-              {days !== null && !isArchived && (
-                <span className={`ml-1 font-sans ${days <= 7 ? "text-red-600 font-medium" : "text-zinc-500"}`}>
-                  ({days <= 0 ? "Overdue" : `${days}d`})
-                </span>
-              )}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-zinc-600">Decision Owner:</span>
-            <span className="text-zinc-900 font-medium">
-              {review.owner ?? (
-                <span className="text-amber-700 bg-amber-50 px-1 py-0.5 rounded border border-amber-200">
-                  Unassigned
-                </span>
-              )}
-            </span>
-          </div>
-        </div>
-
-        {/* Rationale snippet if exists */}
-        {review.rationale && (
-          <div className="p-2 bg-stone-50 rounded border border-stone-200/60 text-[11px] text-zinc-700 line-clamp-2">
-            <span className="font-semibold text-zinc-800 mr-1">Rationale:</span>
-            {review.rationale}
-          </div>
-        )}
-
-        {/* Checklist progress if exists */}
-        {checklistTotal > 0 && (
-          <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono bg-stone-50/70 px-2 py-1 rounded">
-            <span>Checklist</span>
-            <span>
-              {checklistDone}/{checklistTotal} verified
-            </span>
-          </div>
-        )}
-
-        {/* Completion note if archived */}
-        {isArchived && review.completion_note && (
-          <div className="p-2 bg-stone-100/70 rounded text-[11px] text-zinc-600 italic">
-            Completed: {review.completion_note}
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onEdit}
-            disabled={isArchived}
-            className="h-7 px-2 text-xs border-stone-200 text-zinc-700 gap-1 flex-1"
-          >
-            <Pencil className="h-3 w-3" />
-            <span>{isArchived ? "Archived" : "Edit Decision"}</span>
-          </Button>
-
-          {!isArchived && review.decision === "cancel" && (
-            <Button
-              size="sm"
-              onClick={onComplete}
-              className="h-7 px-2.5 text-xs bg-red-700 hover:bg-red-800 text-white font-medium"
-            >
-              Confirm Cancel
-            </Button>
-          )}
-
-          {!isArchived && review.decision === "keep" && (
-            <Button
-              size="sm"
-              onClick={onComplete}
-              className="h-7 px-2.5 text-xs bg-emerald-800 hover:bg-emerald-900 text-white font-medium"
-            >
-              Mark Done
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
   );
 }
