@@ -6,19 +6,27 @@ import { getSession, validateCredentials } from "@/lib/auth/session";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { username, password } = body;
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const rawUser = body.username ?? body.email;
+    const username = typeof rawUser === "string" ? rawUser.trim() : "";
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!username || !password) {
       return NextResponse.json(
-        { error: "Username and password are required" },
+        { error: "Email/username and password are required" },
         { status: 400 }
       );
     }
 
     if (!validateCredentials(username, password)) {
       return NextResponse.json(
-        { error: "Invalid credentials" },
+        { error: "Invalid credentials. Use demo@renewdesk.app / RenewDesk2026!" },
         { status: 401 }
       );
     }
@@ -29,11 +37,11 @@ export async function POST(req: NextRequest) {
     await session.save();
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("Login route error:", err);
     return NextResponse.json(
       { error: "Login failed. Please try again." },
       { status: 500 }
     );
   }
 }
-

@@ -13,7 +13,7 @@ export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET || "fallback-dev-secret-32-chars-min!",
   cookieName: "renewdesk_session",
   cookieOptions: {
-    secure: process.env.NODE_ENV === "production" && (process.env.NEXT_PUBLIC_APP_URL?.startsWith("https") ?? false),
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     sameSite: "lax",
     maxAge: 60 * 60 * 8, // 8 hours
@@ -38,19 +38,11 @@ export function validateCredentials(
   username: string,
   password: string
 ): boolean {
-  const validUsername = process.env.DEMO_USERNAME;
-  const validPassword = process.env.DEMO_PASSWORD;
+  const validUsername = (process.env.DEMO_USERNAME || "demo@renewdesk.app").trim().toLowerCase();
+  const validPassword = (process.env.DEMO_PASSWORD || "RenewDesk2026!").trim();
 
-  if (!validUsername || !validPassword) {
-    // Fallback defaults for local dev (not production)
-    return (
-      username === "demo@renewdesk.app" && password === "RenewDesk2026!"
-    );
-  }
+  const userClean = username.trim().toLowerCase();
+  const passClean = password.trim();
 
-  // Constant-time comparison to prevent timing attacks
-  const userMatch = username === validUsername;
-  const passMatch = password === validPassword;
-  return userMatch && passMatch;
+  return userClean === validUsername && passClean === validPassword;
 }
-

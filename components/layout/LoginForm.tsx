@@ -10,8 +10,8 @@ import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("demo@renewdesk.app");
+  const [password, setPassword] = useState("RenewDesk2026!");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +24,11 @@ export function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          username: email.trim(),
+          email: email.trim(),
+          password,
+        }),
       });
 
       if (!res.ok) {
@@ -37,8 +41,7 @@ export function LoginForm() {
       }
 
       toast.success("Signed in successfully");
-      router.push("/");
-      router.refresh();
+      window.location.href = "/";
     } catch {
       const message = "Network error. Please check your connection.";
       setError(message);
