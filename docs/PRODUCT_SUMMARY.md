@@ -273,14 +273,20 @@ After deploy:
 
 ---
 
-## 13. Claude Connection Steps
+## 13. How to Connect and Demonstrate Without Claude Pro
 
 > [!IMPORTANT]
-> These steps connect Claude to the RenewDesk MCP endpoint. The endpoint contains fictional demo data only.
+> You do NOT need a paid Claude Pro subscription to test, verify, or demonstrate RenewDesk with MCP. Multiple zero-cost options are available.
 
-1. Open Claude Settings > Developer (or Integrations / Connectors depending on your Claude client).
-2. For Claude Desktop:
-   Add to `claude_desktop_config.json`:
+### Option A: Claude Desktop (100% Free Tier, No Pro Needed)
+
+Claude Desktop for macOS and Windows is completely free to download and supports local and remote MCP servers natively.
+
+1. Download Claude Desktop from `https://claude.ai/download` if not already installed.
+2. Open your Claude configuration file:
+   - On Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+   - On macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+3. Add the RenewDesk remote MCP server:
    ```json
    {
      "mcpServers": {
@@ -290,15 +296,46 @@ After deploy:
      }
    }
    ```
-   Or for Claude with remote HTTP connector support:
-   Add integration with URL: `https://renewdesk-phi.vercel.app/api/mcp`
-3. Name it: `RenewDesk`
-4. Claude will discover the 4 tools: `list_subscriptions`, `save_subscriptions`, `list_reviews`, `save_reviews`.
-5. Start a new conversation and try: "What subscriptions are renewing in the next 30 days in RenewDesk?"
+4. Restart Claude Desktop.
+5. In the chat input, look for the hammer/plug icon showing RenewDesk connected with 4 tools:
+   - `list_subscriptions`
+   - `save_subscriptions`
+   - `list_reviews`
+   - `save_reviews`
+6. Ask Claude: "What subscriptions are renewing in the next 30 days in RenewDesk?"
+
+### Option B: Official Model Context Protocol Inspector (Zero Cost, No Sign-in)
+
+Anthropic provides an official open source MCP Inspector that tests and demonstrates any MCP server interactively in your browser with zero logins and zero tokens.
+
+1. Open your terminal and run:
+   ```bash
+   npx @modelcontextprotocol/inspector https://renewdesk-phi.vercel.app/api/mcp
+   ```
+2. The inspector opens at `http://localhost:5173`.
+3. Transport Type will automatically connect to Streamable HTTP.
+4. Click **List Tools** to see all 4 registered tools with their schemas.
+5. Click **Call Tool** on `list_subscriptions` to see live JSON records from Supabase.
+6. Click **Call Tool** on `save_subscriptions` with sample parameters to write directly to the database.
+7. Switch to the RenewDesk web app to see the created record appear instantly.
+
+### Option C: Claude.ai Web (Connectors)
+
+If an evaluator has Claude Pro or an enterprise team account with Connectors enabled:
+1. Open Claude.ai > Account Settings > Connectors / Integrations.
+2. Add a new custom MCP connector.
+3. Name: `RenewDesk`
+4. URL: `https://renewdesk-phi.vercel.app/api/mcp`
+5. Connect and enable in conversation.
+
+### Option D: Gemini Pro Connection
+
+If you want to use your Gemini Pro subscription:
+Gemini CLI and custom function-calling scripts can consume standard OpenAPI or tool function definitions. The shared TypeScript definitions in `lib/validation/index.ts` map 1:1 with Gemini Function Declarations. However, for the pitch video submission, Option A (Free Claude Desktop) or Option B (Official MCP Inspector) directly satisfies the assignment requirement that Claude or an MCP client drives the application.
 
 ---
 
-## 14. Example Prompts for Claude
+## 14. Example Prompts for Claude and MCP Clients
 
 ```
 What subscriptions are renewing in the next 30 days?
