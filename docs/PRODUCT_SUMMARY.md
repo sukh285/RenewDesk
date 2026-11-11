@@ -267,29 +267,34 @@ After deploy:
 
 | Resource | URL |
 |---|---|
-| App | _Fill in after deploy_ |
-| MCP endpoint | _`<app-url>/api/mcp`_ |
+| App | https://renewdesk-phi.vercel.app |
+| MCP endpoint | https://renewdesk-phi.vercel.app/api/mcp |
+| Test credentials | demo@renewdesk.app / RenewDesk2026! |
 
 ---
 
 ## 13. Claude Connection Steps
 
 > [!IMPORTANT]
-> These steps connect Claude.ai to the RenewDesk MCP endpoint. The endpoint contains fictional
-> demo data only.
+> These steps connect Claude to the RenewDesk MCP endpoint. The endpoint contains fictional demo data only.
 
-1. Open [claude.ai](https://claude.ai) and log in.
-2. Click your profile icon (top right) > **Settings**.
-3. Navigate to **Integrations** > **Add custom integration**.
-4. In the **URL** field, enter: `https://<your-app-url>/api/mcp`
-5. In the **Name** field, enter: `RenewDesk`
-6. Click **Add**.
-7. Claude will discover the 4 tools automatically.
-8. Start a new conversation and try: "List my subscriptions in RenewDesk."
-
-> [!NOTE]
-> The MCP endpoint is Streamable HTTP (not SSE or stdio). It is compatible with Claude.ai's
-> custom integration feature as of late 2026.
+1. Open Claude Settings > Developer (or Integrations / Connectors depending on your Claude client).
+2. For Claude Desktop:
+   Add to `claude_desktop_config.json`:
+   ```json
+   {
+     "mcpServers": {
+       "renewdesk": {
+         "url": "https://renewdesk-phi.vercel.app/api/mcp"
+       }
+     }
+   }
+   ```
+   Or for Claude with remote HTTP connector support:
+   Add integration with URL: `https://renewdesk-phi.vercel.app/api/mcp`
+3. Name it: `RenewDesk`
+4. Claude will discover the 4 tools: `list_subscriptions`, `save_subscriptions`, `list_reviews`, `save_reviews`.
+5. Start a new conversation and try: "What subscriptions are renewing in the next 30 days in RenewDesk?"
 
 ---
 
@@ -304,15 +309,11 @@ Which reviews are still undecided?
 ```
 
 ```
-Update the Figma review to "need_info" - we're waiting on headcount confirmation.
+Update the Figma review to "need_info" with rationale "Waiting on headcount confirmation".
 ```
 
 ```
 Add a new subscription: Loom Pro, INR 2200/month, renews 2026-12-20, owned by Rohit Mehra.
-```
-
-```
-Who owns the most subscription renewals this month?
 ```
 
 ```
@@ -323,22 +324,24 @@ Show me all subscriptions Priya Sharma is responsible for.
 
 ## 15. What Is Verified vs. Unverified
 
-### Verified (working locally as of 2026-11-11)
+### Verified (Live in Production)
 
-- Next.js 16 app boots with `npm run dev`
-- Database schema applies cleanly to Supabase
-- Seed script creates all 8 subscriptions and reviews
-- All API routes compile without TypeScript errors
-- MCP server compiles without errors, tools are defined correctly
-- Shared service layer (subscriptions, reviews) is used by both routes and MCP
+- Live Next.js application deployed to Vercel at `https://renewdesk-phi.vercel.app`
+- Remote MCP server responding to Streamable HTTP at `https://renewdesk-phi.vercel.app/api/mcp`
+- Protocol initialization verified with protocol version 2024-11-05
+- Tool discovery verified returning 4 active tools with Zod schemas
+- Live `list_subscriptions` tool call verified reading live Postgres data from Supabase
+- Live `save_subscriptions` tool call verified creating new records with auto-generated 7-day review triggers
+- Live `save_reviews` tool call verified updating review decisions, rationales, and checklists
+- Human boundary enforced: MCP tools cannot mark cancellation as completed
+- Server-side session authentication verified with HttpOnly cookies
+- Overview metrics verified deriving actual renewal spend and open action counts
+- INR formatting (₹) and Asia/Kolkata timezone applied consistently
 
-### Not Yet Verified (pending Supabase credentials and deployment)
+### Manual Evaluator Steps (Unverified by automated test)
 
-- End-to-end login flow in browser
-- MCP tools connecting to Claude.ai and returning real data
-- Vercel deployment build success
-- All UI pages rendering with real data from Supabase
-- Review completion flow in UI
+- Claude desktop or Claude connector UI click-through in evaluator's personal Anthropic account (the remote HTTP endpoint is live and verified ready)
+- 5-minute pitch video recording (by applicant Sukhmeet Singh)
 
 ---
 

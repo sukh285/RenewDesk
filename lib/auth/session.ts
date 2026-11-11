@@ -13,7 +13,7 @@ export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET || "fallback-dev-secret-32-chars-min!",
   cookieName: "renewdesk_session",
   cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && (process.env.NEXT_PUBLIC_APP_URL?.startsWith("https") ?? false),
     httpOnly: true,
     sameSite: "lax",
     maxAge: 60 * 60 * 8, // 8 hours

@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RenewDesk
 
-## Getting Started
+Subscription renewal decision tracking for small teams. Know what renews, who owns the decision, and what action was taken.
 
-First, run the development server:
+Built for the Volopay Founder's Office application.
+
+## Documentation
+
+- [Build Timeline](docs/BUILD_TIMELINE.md) - Chronological development log and milestone verification
+- [Product Summary](docs/PRODUCT_SUMMARY.md) - Full product handoff, architecture, data model, MCP tool documentation, Claude connection instructions, and demo script
+
+## Quick Start
 
 ```bash
+# Install dependencies
+npm install
+
+# Run database setup & seed
+# Run the SQL script at supabase/setup_and_seed.sql in your Supabase SQL Editor
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (App Router, Turbopack, TypeScript)
+- Tailwind CSS & shadcn/ui
+- Model Context Protocol (MCP) Streamable HTTP SDK
+- Supabase PostgreSQL
+- iron-session (secure HttpOnly cookies)

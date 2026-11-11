@@ -257,3 +257,4 @@ INSERT INTO activity_log (subscription_id, review_id, actor, action, payload) VA
   ('a1b2c3d4-0001-0001-0001-000000000001', 'b1b2c3d4-0001-0001-0001-000000000001', 'user', 'review_completed', '{"decision": "keep"}'::jsonb),
   ('a1b2c3d4-0004-0004-0004-000000000004', 'b1b2c3d4-0004-0004-0004-000000000004', 'claude', 'subscription_created', '{"vendor": "Slack", "request_id": "seed-slack-001"}'::jsonb),
   ('a1b2c3d4-0004-0004-0004-000000000004', 'b1b2c3d4-0004-0004-0004-000000000004', 'user', 'review_updated', '{"decision": "cancel", "rationale": "Migrating to Discord"}'::jsonb);
+
