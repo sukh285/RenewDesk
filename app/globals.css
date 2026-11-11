@@ -4,8 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: hsl(30, 10%, 97%);
-  --color-foreground: hsl(224, 14%, 15%);
+  --color-background: hsl(36, 14%, 97%);
+  --color-foreground: hsl(240, 10%, 10%);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--color-primary);
@@ -15,75 +15,69 @@
   --color-sidebar-primary-foreground: var(--color-primary-foreground);
   --color-sidebar-primary: var(--color-primary);
   --color-sidebar-foreground: var(--color-foreground);
-  --color-sidebar: hsl(30, 10%, 94%);
-  --color-chart-5: hsl(340, 75%, 55%);
-  --color-chart-4: hsl(280, 65%, 60%);
-  --color-chart-3: hsl(197, 37%, 24%);
-  --color-chart-2: hsl(173, 58%, 39%);
-  --color-chart-1: hsl(221, 83%, 53%);
-  --color-ring: hsl(158, 64%, 32%);
-  --color-input: hsl(30, 10%, 86%);
-  --color-border: hsl(30, 10%, 86%);
-  --color-destructive: hsl(0, 84%, 60%);
-  --color-accent-foreground: hsl(224, 14%, 15%);
-  --color-accent: hsl(158, 64%, 32%, 0.1);
-  --color-muted-foreground: hsl(224, 8%, 46%);
-  --color-muted: hsl(30, 10%, 93%);
-  --color-secondary-foreground: hsl(224, 14%, 15%);
-  --color-secondary: hsl(30, 10%, 93%);
+  --color-sidebar: hsl(36, 12%, 95%);
+  --color-ring: hsl(160, 84%, 25%);
+  --color-input: hsl(36, 10%, 88%);
+  --color-border: hsl(36, 10%, 88%);
+  --color-destructive: hsl(0, 72%, 51%);
+  --color-accent-foreground: hsl(160, 84%, 20%);
+  --color-accent: hsl(160, 84%, 25%, 0.08);
+  --color-muted-foreground: hsl(240, 4%, 46%);
+  --color-muted: hsl(36, 10%, 93%);
+  --color-secondary-foreground: hsl(240, 10%, 10%);
+  --color-secondary: hsl(36, 10%, 93%);
   --color-primary-foreground: hsl(0, 0%, 100%);
-  --color-primary: hsl(158, 64%, 32%);
-  --color-popover-foreground: hsl(224, 14%, 15%);
+  --color-primary: hsl(160, 84%, 25%);
+  --color-popover-foreground: hsl(240, 10%, 10%);
   --color-popover: hsl(0, 0%, 100%);
-  --color-card-foreground: hsl(224, 14%, 15%);
+  --color-card-foreground: hsl(240, 10%, 10%);
   --color-card: hsl(0, 0%, 100%);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
   --radius: 0.5rem;
 }
 
 :root {
-  --background: hsl(30, 10%, 97%);
-  --foreground: hsl(224, 14%, 15%);
+  --background: hsl(36, 14%, 97%);
+  --foreground: hsl(240, 10%, 10%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(224, 14%, 15%);
+  --card-foreground: hsl(240, 10%, 10%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(224, 14%, 15%);
-  --primary: hsl(158, 64%, 32%);
+  --popover-foreground: hsl(240, 10%, 10%);
+  --primary: hsl(160, 84%, 25%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(30, 10%, 93%);
-  --secondary-foreground: hsl(224, 14%, 15%);
-  --muted: hsl(30, 10%, 93%);
-  --muted-foreground: hsl(224, 8%, 46%);
-  --accent: hsl(158, 64%, 32%, 0.1);
-  --accent-foreground: hsl(224, 14%, 15%);
-  --destructive: hsl(0, 84%, 60%);
-  --border: hsl(30, 10%, 86%);
-  --input: hsl(30, 10%, 86%);
-  --ring: hsl(158, 64%, 32%);
+  --secondary: hsl(36, 10%, 93%);
+  --secondary-foreground: hsl(240, 10%, 10%);
+  --muted: hsl(36, 10%, 93%);
+  --muted-foreground: hsl(240, 4%, 46%);
+  --accent: hsl(160, 84%, 25%, 0.08);
+  --accent-foreground: hsl(160, 84%, 20%);
+  --destructive: hsl(0, 72%, 51%);
+  --border: hsl(36, 10%, 88%);
+  --input: hsl(36, 10%, 88%);
+  --ring: hsl(160, 84%, 25%);
 }
 
 body {
-  background-color: hsl(30, 10%, 97%);
-  color: hsl(224, 14%, 15%);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Smooth transitions */
-* {
-  transition-property: color, background-color, border-color, box-shadow;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-/* Table improvements */
+/* Subtle table borders */
 table {
   border-collapse: collapse;
 }
 
-/* Focus ring improvements */
+/* Tabular numerals for financial values */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Clean accessible focus indicators */
 *:focus-visible {
-  outline: 2px solid hsl(158, 64%, 32%);
-  outline-offset: 2px;
+  outline: 2px solid hsl(160, 84%, 25%);
+  outline-offset: 1px;
 }

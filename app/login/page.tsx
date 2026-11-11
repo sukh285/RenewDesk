@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { LoginForm } from "@/components/layout/LoginForm";
+import { ShieldCheck } from "lucide-react";
 
 export default async function LoginPage() {
   const session = await getSession();
@@ -9,42 +10,38 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center p-4">
+    <main className="min-h-screen bg-[#faf9f6] flex flex-col items-center justify-center p-4 selection:bg-emerald-100 selection:text-emerald-900">
       <div className="w-full max-w-sm">
-        {/* Logo + wordmark */}
-        <div className="flex flex-col items-center mb-8 gap-3">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center flex-shrink-0"
-              aria-hidden="true"
-            >
-              <span className="text-primary-foreground font-bold text-lg leading-none">
-                R
-              </span>
-            </div>
-            <span className="text-2xl font-semibold tracking-tight text-foreground">
-              RenewDesk
-            </span>
+        {/* Brand mark */}
+        <div className="flex flex-col items-center mb-6 gap-2 text-center">
+          <div className="h-9 w-9 rounded-lg bg-emerald-800 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+            RD
           </div>
-          <p className="text-sm text-muted-foreground text-center">
-            Track renewals. Own decisions. Ship on time.
+          <h1 className="text-xl font-bold tracking-tight text-zinc-900">
+            RenewDesk
+          </h1>
+          <p className="text-xs text-zinc-500">
+            Subscription renewal decision tracking for small teams.
           </p>
         </div>
 
-        {/* Login card */}
-        <div className="bg-card border border-border rounded-xl shadow-sm p-6">
-          <div className="mb-5">
-            <h1 className="text-lg font-semibold text-foreground">Sign in</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Enter your credentials to access your workspace.
+        {/* Login Card */}
+        <div className="bg-white border border-stone-200 rounded-xl shadow-xs p-6 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-900">Sign in to Workspace</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Enter demo credentials below to access the decision dashboard.
             </p>
           </div>
+
           <LoginForm />
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Need access? Contact your workspace admin.
-        </p>
+        {/* Security / Demo note */}
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-zinc-400">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          <span>Server-side encrypted session • Fictional demo environment</span>
+        </div>
       </div>
     </main>
   );
